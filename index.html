@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KAIZEN接骨院 ご感想のお願い</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#EAF1F2;--ink:#1F3A4D;--sub:#5B7282;--accent:#2C7A6B;--paper:#FFFFFF;--line:#C9D8DC}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Zen Maru Gothic","Hiragino Maru Gothic ProN","Noto Sans JP",sans-serif;font-size:18px;line-height:1.7}
+  main{max-width:480px;margin:0 auto;padding:28px 18px 60px}
+  .clinic{margin:0 0 4px;font-size:15px;color:var(--accent);font-weight:700}
+  h1{font-size:26px;line-height:1.4;margin:0 0 6px}
+  .lead{color:var(--sub);margin:0 0 28px;font-size:16px}
+  section{margin-bottom:26px}
+  h2{font-size:18px;margin:0 0 10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;font-size:15px;display:grid;place-items:center}
+  .tag{font-size:13px;color:var(--sub);font-weight:500}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:2px solid var(--line);background:var(--paper);color:var(--ink);font:inherit;font-size:17px;padding:10px 16px;border-radius:999px;cursor:pointer}
+  .chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:#fff}
+  input[type=text],textarea{width:100%;font:inherit;font-size:17px;padding:12px;border:2px solid var(--line);border-radius:12px;background:var(--paper);color:var(--ink)}
+  textarea{min-height:110px}
+  .chip:focus-visible,button:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid #F2B84B;outline-offset:2px}
+  .other{margin-top:10px;display:none}
+  .other.show{display:block}
+  .hint{font-size:14px;color:var(--sub);margin:6px 0 0}
+  .preview{background:var(--paper);border-left:5px solid var(--accent);padding:14px 16px;border-radius:4px 12px 12px 4px;white-space:pre-wrap;min-height:60px}
+  .preview.empty{color:var(--sub)}
+  .actions{display:grid;gap:10px;margin-top:14px}
+  .btn{font:inherit;font-size:19px;font-weight:700;padding:16px;border-radius:14px;border:none;cursor:pointer}
+  .primary{background:var(--accent);color:#fff}
+  .primary:disabled{background:#A9BFC3;cursor:not-allowed}
+  .secondary{background:var(--ink);color:#fff}
+  .done{color:var(--accent);font-weight:700;text-align:center;min-height:1.7em;margin:4px 0 0}
+</style>
+</head>
+<body>
+<main>
+  <p class="clinic">KAIZEN接骨院</p>
+  <h1>ご感想をお聞かせください</h1>
+  <p class="lead">30秒ほどで終わります。当てはまるものを選んで、最後にひとことだけ書いてください。</p>
+
+  <section>
+    <h2><span class="num">1</span>どちらからお越しですか<span class="tag">(任意)</span></h2>
+    <div class="chips" id="cityChips"></div>
+    <div class="other" id="cityOtherBox">
+      <input type="text" id="cityOther" placeholder="例:前橋市、みどり市 など" aria-label="その他の地域">
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">2</span>どんな症状で来られましたか</h2>
+    <div class="chips" id="symptom"></div>
+    <div class="other" id="otherBox">
+      <input type="text" id="otherInput" placeholder="例:股関節の痛み、手首の痛み など" aria-label="その他の症状">
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">3</span>来院時はどんな状態でしたか<span class="tag">(いくつでも・任意)</span></h2>
+    <div class="chips" id="state"></div>
+    <div class="other" id="stateOtherBox">
+      <input type="text" id="stateOther" placeholder="例:階段の上り下りがつらい など" aria-label="その他の状態">
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="num">4</span>通ってみていかがでしたか</h2>
+    <textarea id="comment" placeholder="施術後どう変わったか、説明はわかりやすかったか など、思ったことをそのまま"></textarea>
+    <p class="hint">キーボードのマイクを押すと、話すだけで入力できます。</p>
+  </section>
+
+  <section>
+    <h2><span class="num">5</span>この文章で投稿します</h2>
+    <div class="preview empty" id="preview">入力すると、ここに文章ができます。</div>
+    <div class="actions">
+      <button class="btn primary" id="copy" disabled>文章をコピーする</button>
+      <button class="btn secondary" id="open">Googleの口コミを開く</button>
+    </div>
+    <p class="done" id="done" aria-live="polite"></p>
+    <p class="hint">コピーしたあと、口コミ画面で星を選び、長押しで「貼り付け」してください。</p>
+  </section>
+</main>
+
+<script>
+  // ▼ 院の設定
+  const GOOGLE_REVIEW_URL = "https://g.page/r/CVpzxVWuxZxnEBM/review";
+  const SYMPTOMS = ["腰痛","肩こり","首の痛み","膝の痛み","捻挫","スポーツのけが","骨折後のリハビリ","その他"];
+  const STATES = ["歩くのがつらい","寝返りで痛む","腕が上がらない","朝起きると痛む","長く座っていられない","しびれがある","仕事や家事に支障がある","運動やスポーツができない","その他"];
+  const CITIES = ["伊勢崎市","高崎市","本庄市","桐生市","太田市","その他"];
+
+  const sel = {city:null, symptom:null, state:new Set()};
+  const $ = id => document.getElementById(id);
+  const stateOtherBox=$("stateOtherBox"), stateOther=$("stateOther");
+  const cityOtherBox=$("cityOtherBox"), cityOther=$("cityOther"), otherBox=$("otherBox"), otherInput=$("otherInput"),
+        comment=$("comment"), preview=$("preview"), copyBtn=$("copy"), done=$("done");
+
+  function makeChips(id, items, key, multi){
+    const box=$(id);
+    items.forEach(label=>{
+      const b=document.createElement("button");
+      b.className="chip"; b.textContent=label; b.setAttribute("aria-pressed","false");
+      b.onclick=()=>{
+        if(multi){
+          const on = b.getAttribute("aria-pressed")!=="true";
+          b.setAttribute("aria-pressed", on);
+          on ? sel[key].add(label) : sel[key].delete(label);
+          if(key==="state" && label==="その他"){ stateOtherBox.classList.toggle("show", on); if(on) stateOther.focus(); }
+        }else{
+          const wasOn = b.getAttribute("aria-pressed")==="true";
+          box.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed","false"));
+          if(wasOn && key==="city"){ sel[key]=null; }
+          else { b.setAttribute("aria-pressed","true"); sel[key]=label; }
+          const isOther = sel[key]==="その他";
+          if(key==="symptom"){ otherBox.classList.toggle("show", isOther); if(isOther) otherInput.focus(); }
+          if(key==="city"){ cityOtherBox.classList.toggle("show", isOther); if(isOther) cityOther.focus(); }
+        }
+        render();
+      };
+      box.appendChild(b);
+    });
+  }
+
+  function symptomText(){
+    return sel.symptom==="その他" ? otherInput.value.trim() : sel.symptom;
+  }
+
+  function cityText(){
+    if(!sel.city) return "";
+    return sel.city==="その他" ? cityOther.value.trim() : sel.city;
+  }
+
+  function buildText(){
+    const parts=[];
+    const c=cityText(), s=symptomText();
+    if(c && s) parts.push(`${c}から、${s}で来院しました。`);
+    else if(s) parts.push(`${s}で来院しました。`);
+    else if(c) parts.push(`${c}から来院しました。`);
+    const st=[...sel.state].sort((a,b)=>STATES.indexOf(a)-STATES.indexOf(b))
+      .map(x=> x==="その他" ? stateOther.value.trim() : x).filter(Boolean);
+    if(st.length===1) parts.push(`来院時は${st[0]}という状態でした。`);
+    if(st.length>1) parts.push(`来院時は${st.join("・")}といった状態でした。`);
+    const m=comment.value.trim();
+    if(m) parts.push(m);
+    return parts.join("");
+  }
+
+  function render(){
+    const text=buildText();
+    preview.textContent = text || "入力すると、ここに文章ができます。";
+    preview.classList.toggle("empty", !text);
+    copyBtn.disabled = !(symptomText() && comment.value.trim().length>=2);
+    done.textContent="";
+  }
+
+  [cityOther, otherInput, stateOther, comment].forEach(el=>el.addEventListener("input", render));
+
+  copyBtn.onclick = async ()=>{
+    const text=buildText();
+    try{ await navigator.clipboard.writeText(text); }
+    catch(e){
+      const t=document.createElement("textarea"); t.value=text; document.body.appendChild(t);
+      t.select(); document.execCommand("copy"); t.remove();
+    }
+    done.textContent="コピーしました。次に「Googleの口コミを開く」を押してください。";
+  };
+  $("open").onclick = ()=> window.open(GOOGLE_REVIEW_URL, "_blank");
+
+  makeChips("cityChips", CITIES, "city", false);
+  makeChips("symptom", SYMPTOMS, "symptom", false);
+  makeChips("state", STATES, "state", true);
+</script>
+</body>
+</html>
